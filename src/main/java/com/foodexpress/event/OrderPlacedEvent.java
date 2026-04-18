@@ -1,0 +1,10 @@
+package com.foodexpress.event;
+
+import java.math.BigDecimal;
+
+public record OrderPlacedEvent(
+    Long orderId,
+    Long customerId,
+    Long restaurantId,
+    BigDecimal totalAmount
+) {}

@@ -3,6 +3,8 @@ package com.foodexpress.service;
 import com.foodexpress.dto.request.PlaceOrderRequest;
 import com.foodexpress.dto.request.UpdateOrderStatusRequest;
 import com.foodexpress.dto.response.OrderResponse;
+import com.foodexpress.event.OrderPlacedEvent;
+import com.foodexpress.event.OrderStatusChangedEvent;
 import com.foodexpress.exception.*;
 import com.foodexpress.mapper.OrderMapper;
 import com.foodexpress.model.entity.*;
@@ -10,8 +12,11 @@ import com.foodexpress.model.enums.OrderStatus;
 import com.foodexpress.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +27,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class OrderService {
 
+    private final ApplicationEventPublisher eventPublisher;
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final RestaurantRepository restaurantRepository;
@@ -89,6 +95,10 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         log.info("Commande #{} créée — {} — total: {}€", saved.getId(), restaurant.getName(), total);
 
+        // 6. Publier l'event (avant le return !)
+        eventPublisher.publishEvent(new OrderPlacedEvent(
+                saved.getId(), customer.getId(), restaurant.getId(), total));
+
         return orderMapper.toResponse(saved);
     }
 
@@ -122,7 +132,13 @@ public class OrderService {
             order.setDeliveredAt(LocalDateTime.now());
         }
 
+        Order saved = orderRepository.save(order);
         log.info("Commande #{} : {} → {}", id, currentStatus, newStatus);
-        return orderMapper.toResponse(orderRepository.save(order));
+
+        // Publier l'event (avant le return !)
+        eventPublisher.publishEvent(new OrderStatusChangedEvent(
+                id, currentStatus, newStatus));
+
+        return orderMapper.toResponse(saved);
     }
 }
