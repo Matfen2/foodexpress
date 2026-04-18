@@ -108,7 +108,7 @@ public class OrderService {
         return orderMapper.toResponse(order);
     }
 
-    public List<OrderResponse> getByCustomer(Long customerId) {
+    public List<OrderResponse> getByCustomer(Long customerId, int page, int size) {
         return orderRepository.findByCustomerId(customerId)
                 .stream().map(orderMapper::toResponse).toList();
     }

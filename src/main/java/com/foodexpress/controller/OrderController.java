@@ -29,8 +29,10 @@ public class OrderController {
     }
 
     @GetMapping("/customer/{customerId}")
-    public List<OrderResponse> getByCustomer(@PathVariable Long customerId) {
-        return orderService.getByCustomer(customerId);
+    public List<OrderResponse> getByCustomer(@PathVariable Long customerId,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int size) {
+        return orderService.getByCustomer(customerId, page, size);
     }
 
     @PatchMapping("/{id}/status")
