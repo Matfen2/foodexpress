@@ -3,7 +3,7 @@ name: Publish Docker Image
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # permet de lancer manuellement depuis l'UI GitHub
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
