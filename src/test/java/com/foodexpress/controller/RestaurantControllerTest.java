@@ -18,7 +18,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RestaurantControllerTest {
 
     @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
+
+    // ObjectMapper créé manuellement (Spring Boot 4 expose JsonMapper, pas ObjectMapper)
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void createRestaurant_validData_returns201() throws Exception {
