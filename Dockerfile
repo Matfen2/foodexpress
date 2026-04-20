@@ -10,5 +10,9 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
+
+# Port par défaut, écrasé par la variable PORT injectée par Render
+ENV PORT=8080
 EXPOSE 8080
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
