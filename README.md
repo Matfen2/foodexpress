@@ -11,8 +11,6 @@ REST API de commande et livraison de nourriture — Spring Boot 4 / PostgreSQL /
 - **Swagger UI** : https://foodexpress-api-2xp2.onrender.com/swagger-ui.html
 - **Health check** : https://foodexpress-api-2xp2.onrender.com/actuator/health
 
-> ⚠️ L'instance Free Render se met en veille après 15 min d'inactivité. Le premier appel déclenche un cold start d'environ 30 secondes, les suivants sont instantanés.
-
 ## Stack
 
 - **Backend** : Java 17, Spring Boot 4, Spring Data JPA, MapStruct, Lombok
