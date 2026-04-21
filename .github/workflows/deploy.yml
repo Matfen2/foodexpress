@@ -7,11 +7,14 @@ on:
     types: [completed]
   workflow_dispatch:
 
+env:
+  HEALTH_URL: https://foodexpress-api-2xp2.onrender.com/actuator/health
+  APP_URL: https://foodexpress-api-2xp2.onrender.com
+
 jobs:
   deploy:
     name: Trigger Render Deployment
     runs-on: ubuntu-latest
-    # Ne déployer que si le workflow Publish a réussi (ou déclenché à la main)
     if: >
       github.event.workflow_run.conclusion == 'success' ||
       github.event_name == 'workflow_dispatch'
@@ -23,10 +26,61 @@ jobs:
           RESPONSE=$(curl -sS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
           echo "Render response: $RESPONSE"
 
-      - name: Summary
+      - name: Wait for Render to process the hook
         run: |
-          echo "### Deployment triggered :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Render is pulling the latest image from GHCR and deploying it." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Check live status: https://dashboard.render.com" >> $GITHUB_STEP_SUMMARY
+          echo "Waiting 30 seconds for Render to start the new deployment..."
+          sleep 30
+
+      - name: Health check (poll until UP or timeout)
+        id: healthcheck
+        run: |
+          MAX_ATTEMPTS=20
+          SLEEP_SECONDS=15
+          ATTEMPT=1
+          
+          echo "Polling $HEALTH_URL"
+          echo "Max attempts: $MAX_ATTEMPTS ($((MAX_ATTEMPTS * SLEEP_SECONDS))s max)"
+          echo ""
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            RESPONSE=$(curl -sS -o /tmp/health.json -w "%{http_code}" "$HEALTH_URL" || echo "000")
+            BODY=$(cat /tmp/health.json 2>/dev/null || echo "")
+            
+            echo "[$ATTEMPT/$MAX_ATTEMPTS] HTTP $RESPONSE — $BODY"
+            
+            if [ "$RESPONSE" = "200" ] && echo "$BODY" | grep -q '"status":"UP"'; then
+              echo ""
+              echo "✅ Application is healthy!"
+              echo "status=healthy" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+            sleep $SLEEP_SECONDS
+          done
+          
+          echo ""
+          echo "❌ Health check failed after $((MAX_ATTEMPTS * SLEEP_SECONDS))s"
+          echo "status=unhealthy" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          if [ "${{ steps.healthcheck.outputs.status }}" = "healthy" ]; then
+            echo "## ✅ Deployment successful" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The new version is live and responding on production." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **App**: ${{ env.APP_URL }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Health**: ${{ env.HEALTH_URL }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Swagger**: ${{ env.APP_URL }}/swagger-ui.html" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Deployment failed health check" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The deploy hook was triggered but the app did not respond with status UP within the timeout." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Investigate:" >> $GITHUB_STEP_SUMMARY
+            echo "- [Render logs](https://dashboard.render.com)" >> $GITHUB_STEP_SUMMARY
+            echo "- [App health endpoint](${{ env.HEALTH_URL }})" >> $GITHUB_STEP_SUMMARY
+          fi
