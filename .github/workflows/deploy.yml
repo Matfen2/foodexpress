@@ -1,0 +1,32 @@
+name: Deploy to Render
+
+on:
+  workflow_run:
+    workflows: ["Publish Docker Image"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Trigger Render Deployment
+    runs-on: ubuntu-latest
+    # Ne déployer que si le workflow Publish a réussi (ou déclenché à la main)
+    if: >
+      github.event.workflow_run.conclusion == 'success' ||
+      github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Trigger Render deploy hook
+        run: |
+          echo "Triggering Render deployment..."
+          RESPONSE=$(curl -sS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+          echo "Render response: $RESPONSE"
+
+      - name: Summary
+        run: |
+          echo "### Deployment triggered :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Render is pulling the latest image from GHCR and deploying it." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check live status: https://dashboard.render.com" >> $GITHUB_STEP_SUMMARY
