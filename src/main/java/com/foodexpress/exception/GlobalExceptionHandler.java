@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,6 +60,17 @@ public class GlobalExceptionHandler {
                 .message("Les données envoyées sont invalides")
                 .timestamp(LocalDateTime.now())
                 .details(errors)
+                .build();
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNoResourceFound(NoResourceFoundException ex) {
+        log.debug("Ressource statique introuvable : {}", ex.getResourcePath());
+        return ErrorResponse.builder()
+                .error("NOT_FOUND")
+                .message("Ressource introuvable")
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
