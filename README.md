@@ -3,7 +3,7 @@
 [![CI](https://github.com/Matfen2/foodexpress/actions/workflows/ci.yml/badge.svg)](https://github.com/Matfen2/foodexpress/actions/workflows/ci.yml)
 [![Docker](https://github.com/Matfen2/foodexpress/actions/workflows/publish.yml/badge.svg)](https://github.com/Matfen2/foodexpress/actions/workflows/publish.yml)
 
-REST API de commande et livraison de nourriture — Spring Boot 4 / PostgreSQL / Docker.
+REST API de commande et livraison de nourriture - Spring Boot 4 / PostgreSQL / Docker.
 
 ## Démo live
 
@@ -52,12 +52,12 @@ Une fois les containers démarrés :
 
 CI/CD piloté par GitHub Actions, deux workflows complémentaires :
 
-1. **`ci.yml`** — sur chaque push et chaque PR : build Maven, exécution des
+1. **`ci.yml`** - sur chaque push et chaque PR : build Maven, exécution des
    tests unitaires et d'intégration, échec bloquant si la couverture régresse.
-2. **`publish.yml`** — sur push `main` validé par la CI : build d'une image
+2. **`publish.yml`** - sur push `main` validé par la CI : build d'une image
    Docker multi-stage (étape Maven + étape JRE Alpine), publication sur GHCR
    à `ghcr.io/matfen2/foodexpress:latest` et `:sha-<commit>`.
-3. **Déploiement Render** — auto-deploy déclenché par push GHCR avec health
+3. **Déploiement Render** - auto-deploy déclenché par push GHCR avec health
    check polling sur `/actuator/health` avant bascule du trafic.
 
 ```bash
