@@ -70,7 +70,7 @@ docker pull ghcr.io/matfen2/foodexpress:latest
 
 - **Application** : Render (Web Service Docker, région Frankfurt)
 - **Base de données** : Neon Serverless Postgres (tier free, région Frankfurt)
-- **Monitoring** : UptimeRobot — check HTTP sur `/actuator/health` toutes les
+- **Monitoring** : UptimeRobot - check HTTP sur `/actuator/health` toutes les
   5 minutes, alertes email en cas de DOWN > 1 cycle
 
 ### Migration de provider DB
