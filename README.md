@@ -3,17 +3,12 @@
 [![CI](https://github.com/Matfen2/foodexpress/actions/workflows/ci.yml/badge.svg)](https://github.com/Matfen2/foodexpress/actions/workflows/ci.yml)
 [![Docker](https://github.com/Matfen2/foodexpress/actions/workflows/publish.yml/badge.svg)](https://github.com/Matfen2/foodexpress/actions/workflows/publish.yml)
 
-REST API de commande et livraison de nourriture — Spring Boot 4 / PostgreSQL / Docker.
+REST API de commande et livraison de nourriture - Spring Boot 4 / PostgreSQL / Docker.
 
 ## Démo live
 
-- **API** : https://foodexpress-api-2xp2.onrender.com/api/restaurants
-- **Swagger UI** : https://foodexpress-api-2xp2.onrender.com/swagger-ui.html
-- **Health check** : https://foodexpress-api-2xp2.onrender.com/actuator/health
-
-> ⚠️ L'instance Render Free se met en veille après 15 min d'inactivité.
-> Le premier appel déclenche un cold start (~30 s), les suivants sont instantanés.
-> La base Neon scale-to-zero après 5 min également (reprise ~500 ms).
+- **Swagger UI** : https://foodexpress-w7uq.onrender.com/swagger-ui/index.html
+- **Health check** : https://foodexpress-w7uq.onrender.com/actuator/health
 
 ## Stack
 
@@ -52,12 +47,12 @@ Une fois les containers démarrés :
 
 CI/CD piloté par GitHub Actions, deux workflows complémentaires :
 
-1. **`ci.yml`** — sur chaque push et chaque PR : build Maven, exécution des
+1. **`ci.yml`** - sur chaque push et chaque PR : build Maven, exécution des
    tests unitaires et d'intégration, échec bloquant si la couverture régresse.
-2. **`publish.yml`** — sur push `main` validé par la CI : build d'une image
+2. **`publish.yml`** - sur push `main` validé par la CI : build d'une image
    Docker multi-stage (étape Maven + étape JRE Alpine), publication sur GHCR
    à `ghcr.io/matfen2/foodexpress:latest` et `:sha-<commit>`.
-3. **Déploiement Render** — auto-deploy déclenché par push GHCR avec health
+3. **Déploiement Render** - auto-deploy déclenché par push GHCR avec health
    check polling sur `/actuator/health` avant bascule du trafic.
 
 ```bash
@@ -70,7 +65,7 @@ docker pull ghcr.io/matfen2/foodexpress:latest
 
 - **Application** : Render (Web Service Docker, région Frankfurt)
 - **Base de données** : Neon Serverless Postgres (tier free, région Frankfurt)
-- **Monitoring** : UptimeRobot — check HTTP sur `/actuator/health` toutes les
+- **Monitoring** : UptimeRobot - check HTTP sur `/actuator/health` toutes les
   5 minutes, alertes email en cas de DOWN > 1 cycle
 
 ### Migration de provider DB
