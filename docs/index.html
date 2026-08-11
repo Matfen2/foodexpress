@@ -412,7 +412,7 @@
 
 <!-- FOOTER -->
 <footer>
-  Projet de <a href="https://www.linkedin.com/in/mathieu-fenouil-développeur-full-stack/" target="_blank">Mathieu Fenouil</a> —
+  Projet de <a href="https://www.linkedin.com/in/mathieu-fenouil-développeur-full-stack/" target="_blank">Mathieu Fenouil</a> -
   Développeur Full-Stack Java / React ·
   <a href="https://github.com/Matfen2/foodexpress" target="_blank">github.com/Matfen2/foodexpress</a>
 </footer>
@@ -425,17 +425,17 @@
 
   async function checkHealth() {
     try {
-      const r = await fetch(API_HEALTH, { signal: AbortSignal.timeout(8000) });
-      if (r.ok) {
-        dot.className  = 'dot online';
-        text.textContent = 'API en ligne — Swagger accessible instantanément';
-      } else {
-        dot.className  = 'dot offline';
-        text.textContent = 'API indisponible (statut ' + r.status + ')';
-      }
+      // mode no-cors : on ne peut pas lire la réponse mais si ça ne throw pas → l'API répond
+      await fetch(API_HEALTH, {
+        mode: 'no-cors',
+        signal: AbortSignal.timeout(8000)
+      });
+      // no-cors retourne toujours un opaque response (pas d'exception) si le serveur répond
+      dot.className = 'dot online';
+      text.textContent = 'API en ligne - Swagger accessible instantanément';
     } catch {
-      dot.className  = 'dot offline';
-      text.textContent = 'API en cours de démarrage — réessai dans 15 s…';
+      dot.className = 'dot loading';
+      text.textContent = 'API en cours de démarrage - réessai dans 15 s…';
       setTimeout(checkHealth, 15000);
     }
   }
