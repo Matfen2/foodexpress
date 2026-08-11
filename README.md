@@ -7,6 +7,7 @@ REST API de commande et livraison de nourriture - Spring Boot 4 / PostgreSQL / D
 
 ## Démo live
 
+- **Landing page** : https://matfen2.github.io/foodexpress/
 - **Swagger UI** : https://foodexpress-w7uq.onrender.com/swagger-ui/index.html
 - **Health check** : https://foodexpress-w7uq.onrender.com/actuator/health
 
