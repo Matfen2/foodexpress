@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  HEALTH_URL: https://foodexpress-api-2xp2.onrender.com/actuator/health
-  APP_URL: https://foodexpress-api-2xp2.onrender.com
+  HEALTH_URL: https://foodexpress-w7uq.onrender.com/actuator/health
+  APP_URL: https://foodexpress-w7uq.onrender.com
 
 jobs:
   deploy:
