@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoodExpress - REST API · Mathieu Fenouil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --border:    #21262d;
+      --text:      #e6edf3;
+      --muted:     #7d8590;
+      --green:     #3fb950;
+      --green-dim: #1a4228;
+      --blue:      #58a6ff;
+      --orange:    #f78166;
+      --tag-bg:    #1c2128;
+      --radius:    6px;
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(13,17,23,.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--green);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+    }
+    .badge-row {
+      display: flex; gap: .5rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+    }
+    .badge-green { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+    .badge-blue  { color: var(--blue);  border-color: #1f3a5a;      background: #0d2033; }
+    .badge-gray  { color: var(--muted); border-color: var(--border); background: var(--tag-bg); }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 600;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      margin-bottom: .75rem;
+    }
+    h1 span { color: var(--green); }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 540px;
+      margin-bottom: 2.5rem;
+    }
+
+    .cta-row { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem 1.2rem;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: opacity .15s, transform .1s;
+      cursor: pointer;
+    }
+    .btn:hover { opacity: .85; transform: translateY(-1px); }
+    .btn-primary { background: var(--green); color: #0d1117; }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    /* ── WAKE-UP STATUS ── */
+    .status-bar {
+      max-width: 860px; margin: 0 auto; padding: 0 2rem 3rem;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .5rem 1rem;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+    .dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.loading { background: #e3b341; animation: pulse 1s infinite; }
+    .dot.offline { background: var(--orange); }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+    /* ── DIVIDER ── */
+    .divider {
+      max-width: 860px; margin: 0 auto;
+      border: none; border-top: 1px solid var(--border);
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── STACK GRID ── */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: .75rem;
+    }
+    .stack-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem 1rem;
+    }
+    .stack-card .sc-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .35rem;
+    }
+    .stack-card .sc-value {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* ── ENDPOINTS ── */
+    .endpoint-list { display: flex; flex-direction: column; gap: .5rem; }
+    .endpoint {
+      display: flex; align-items: center; gap: .75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .55rem .9rem;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .method {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 7px; border-radius: 3px;
+      min-width: 46px; text-align: center;
+    }
+    .GET    { background: #0d3a2a; color: #3fb950; }
+    .POST   { background: #1a2f4a; color: #58a6ff; }
+    .PATCH  { background: #2d2008; color: #e3b341; }
+    .ep-path { color: var(--text); flex: 1; }
+    .ep-desc { color: var(--muted); font-size: 11px; }
+
+    /* ── PIPELINE ── */
+    .pipeline {
+      display: flex; gap: 0; flex-wrap: wrap;
+    }
+    .pipeline-step {
+      display: flex; align-items: center;
+    }
+    .ps-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .6rem 1rem;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .ps-box strong { display: block; font-size: 12px; color: var(--green); font-family: var(--mono); }
+    .ps-arrow {
+      color: var(--border);
+      padding: 0 .4rem;
+      font-size: 18px;
+    }
+
+    /* ── ARCH BULLETS ── */
+    .arch-list {
+      list-style: none;
+      display: flex; flex-direction: column; gap: .6rem;
+    }
+    .arch-list li {
+      display: flex; align-items: flex-start; gap: .75rem;
+      font-size: 14px; color: var(--muted);
+    }
+    .arch-list li::before {
+      content: '→';
+      color: var(--green);
+      font-family: var(--mono);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .arch-list li strong { color: var(--text); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      nav { padding: 0 1rem; }
+      .hero, .status-bar, section { padding-left: 1rem; padding-right: 1rem; }
+      .pipeline { flex-direction: column; gap: .4rem; }
+      .ps-arrow { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">FoodExpress</a>
+  <div class="nav-links">
+    <a href="#stack">Stack</a>
+    <a href="#api">API</a>
+    <a href="#archi">Architecture</a>
+    <a href="https://github.com/Matfen2/foodexpress" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge-row">
+    <span class="badge badge-green">Spring Boot 4</span>
+    <span class="badge badge-blue">Java 17</span>
+    <span class="badge badge-gray">PostgreSQL</span>
+    <span class="badge badge-gray">Docker</span>
+    <span class="badge badge-gray">CI/CD</span>
+  </div>
+  <h1>Food<span>Express</span></h1>
+  <p class="subtitle">
+    API REST de commande et livraison de nourriture. Architecture event-driven, pipeline CI/CD complet, déployé en production sur Render + Neon.
+  </p>
+  <div class="cta-row">
+    <a id="swagger-btn" class="btn btn-primary" href="https://foodexpress-w7uq.onrender.com/swagger-ui/index.html" target="_blank">
+      ▶ Swagger UI
+    </a>
+    <a class="btn btn-secondary" href="https://github.com/Matfen2/foodexpress" target="_blank">
+      ⌥ Code source
+    </a>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-pill">
+    <div class="dot loading" id="status-dot"></div>
+    <span id="status-text">Vérification de l'API…</span>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- STACK -->
+<section id="stack">
+  <div class="section-label">Stack</div>
+  <h2>Technologies utilisées</h2>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-label">Backend</div>
+      <div class="sc-value">Java 17<br>Spring Boot 4<br>Spring Data JPA<br>MapStruct · Lombok</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-label">Base de données</div>
+      <div class="sc-value">PostgreSQL 18 (prod)<br>H2 (dev)<br>Flyway migrations</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-label">Tests</div>
+      <div class="sc-value">JUnit 5<br>Mockito<br>MockMvc · AssertJ</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-label">Infra</div>
+      <div class="sc-value">Docker multi-stage<br>Docker Compose<br>GitHub Actions<br>GHCR</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-label">Hébergement</div>
+      <div class="sc-value">Render (Web Service)<br>Neon (Serverless PG)<br>UptimeRobot</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-label">Observabilité</div>
+      <div class="sc-value">Spring Boot Actuator<br>SpringDoc OpenAPI<br>Swagger UI</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- API -->
+<section id="api">
+  <div class="section-label">API</div>
+  <h2>Endpoints principaux</h2>
+  <div class="endpoint-list">
+    <div class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/restaurants</span><span class="ep-desc">Liste paginée des restaurants</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/restaurants</span><span class="ep-desc">Création d'un restaurant</span></div>
+    <div class="endpoint"><span class="method PATCH">PATCH</span><span class="ep-path">/api/restaurants/{id}/deactivate</span><span class="ep-desc">Désactivation</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/restaurants/{id}</span><span class="ep-desc">Détail d'un restaurant</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/orders</span><span class="ep-desc">Passage d'une commande</span></div>
+    <div class="endpoint"><span class="method PATCH">PATCH</span><span class="ep-path">/api/orders/{id}/status</span><span class="ep-desc">Mise à jour du statut (state machine)</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/orders/customer/{customerId}</span><span class="ep-desc">Historique client</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/menu-items</span><span class="ep-desc">Ajout d'un item au menu</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/menu-items/restaurant/{restaurantId}</span><span class="ep-desc">Menu d'un restaurant</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/customers</span><span class="ep-desc">Inscription client</span></div>
+  </div>
+  <p style="margin-top:1.2rem; color: var(--muted); font-size:13px;">
+    Documentation interactive complète →
+    <a href="https://foodexpress-w7uq.onrender.com/swagger-ui/index.html" target="_blank" style="color:var(--blue);">Swagger UI</a>
+  </p>
+</section>
+
+<hr class="divider" />
+
+<!-- ARCHITECTURE -->
+<section id="archi">
+  <div class="section-label">Architecture</div>
+  <h2>Choix techniques</h2>
+  <ul class="arch-list">
+    <li><strong>Event-driven</strong> - ApplicationEventPublisher avec @Async + @EventListener pour le découplage des effets de bord (notifications, logs)</li>
+    <li><strong>State machine</strong> - Cycle de vie des commandes géré via OrderStatus avec transitions validées côté service</li>
+    <li><strong>Gestion d'erreurs centralisée</strong> - @RestControllerAdvice : 404 ressource manquante, 422 règle métier, 400 validation, 500 catch-all</li>
+    <li><strong>Migrations versionnées</strong> - Flyway V1 → V4, rejeu automatique à chaque démarrage</li>
+    <li><strong>Pagination</strong> - Spring Data Pageable sur tous les endpoints de liste</li>
+    <li><strong>Validation</strong> - Bean Validation (@Valid, @NotBlank, etc.) sur toutes les DTOs entrantes</li>
+  </ul>
+
+  <div style="margin-top: 2.5rem;">
+    <div class="section-label">Pipeline CI/CD</div>
+    <div class="pipeline" style="margin-top:.75rem; gap:.4rem; align-items:center; flex-wrap:wrap;">
+      <div class="pipeline-step">
+        <div class="ps-box"><strong>Push / PR</strong>ci.yml</div>
+        <div class="ps-arrow">→</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="ps-box"><strong>Maven Build</strong>Tests + couverture</div>
+        <div class="ps-arrow">→</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="ps-box"><strong>Docker multi-stage</strong>publish.yml</div>
+        <div class="ps-arrow">→</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="ps-box"><strong>GHCR</strong>:latest + :sha</div>
+        <div class="ps-arrow">→</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="ps-box"><strong>Render</strong>Auto-deploy + health check</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  Projet de <a href="https://www.linkedin.com/in/mathieu-fenouil-développeur-full-stack/" target="_blank">Mathieu Fenouil</a> —
+  Développeur Full-Stack Java / React ·
+  <a href="https://github.com/Matfen2/foodexpress" target="_blank">github.com/Matfen2/foodexpress</a>
+</footer>
+
+<!-- WAKE-UP SCRIPT -->
+<script>
+  const API_HEALTH = 'https://foodexpress-w7uq.onrender.com/actuator/health';
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+
+  async function checkHealth() {
+    try {
+      const r = await fetch(API_HEALTH, { signal: AbortSignal.timeout(8000) });
+      if (r.ok) {
+        dot.className  = 'dot online';
+        text.textContent = 'API en ligne — Swagger accessible instantanément';
+      } else {
+        dot.className  = 'dot offline';
+        text.textContent = 'API indisponible (statut ' + r.status + ')';
+      }
+    } catch {
+      dot.className  = 'dot offline';
+      text.textContent = 'API en cours de démarrage — réessai dans 15 s…';
+      setTimeout(checkHealth, 15000);
+    }
+  }
+
+  checkHealth();
+</script>
+</body>
+</html>
