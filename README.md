@@ -9,7 +9,7 @@ REST API de commande et livraison de nourriture - Spring Boot 4 / PostgreSQL / D
 
 - **Landing page** : https://matfen2.github.io/foodexpress/
 - **Swagger UI** : https://foodexpress-w7uq.onrender.com/swagger-ui/index.html
-- **Health check** : https://foodexpress-w7uq.onrender.com/actuator/health
+- **Health check** : https://foodexpress-w7uq.onrender.com/actuator/health/liveness
 
 ## Stack
 
@@ -66,8 +66,28 @@ docker pull ghcr.io/matfen2/foodexpress:latest
 
 - **Application** : Render (Web Service Docker, région Frankfurt)
 - **Base de données** : Neon Serverless Postgres (tier free, région Frankfurt)
-- **Monitoring** : UptimeRobot - check HTTP sur `/actuator/health` toutes les
-  5 minutes, alertes email en cas de DOWN > 1 cycle
+- **Monitoring** : UptimeRobot - check HTTP sur `/actuator/health/liveness`
+  toutes les 5 minutes (keep-alive Render), alertes email en cas de DOWN > 1 cycle
+
+### Health probes : liveness vs readiness
+
+L'application expose deux endpoints Actuator distincts (Spring Boot health
+groups) pour découpler le keep-alive de la vérification applicative complète :
+
+- **`/actuator/health/liveness`** : reflète uniquement l'état interne du
+  process (contexte Spring démarré), sans dépendance externe. C'est
+  l'endpoint pingé par UptimeRobot pour garder l'instance Render éveillée,
+  sans solliciter la base à chaque check.
+- **`/actuator/health/readiness`** / **`/actuator/health`** : inclut la
+  vérification de la connexion à la base de données. Utilisé par Render
+  comme health check de déploiement (bascule du trafic uniquement si la DB
+  est réellement joignable).
+
+Ce découpage évite qu'un pinger fréquent ne consomme inutilement le quota de
+compute-time gratuit de Neon (l'incident du 18 août 2026 - service down
+13 jours - venait justement d'un health check `/actuator/health` pingé
+toutes les 5 min qui réveillait la base à chaque fois, épuisant le quota
+mensuel).
 
 ### Migration de provider DB
 
